@@ -5,10 +5,39 @@ let pdfDoc = null,
   pageIsRendering = false,
   pageNumIsPending = null;
 
-const scale = 1.5,
+const scale = 2,
   canvas = document.querySelector("#pdf-render"),
   ctx = canvas.getContext("2d");
 
-const renderPage = num => {};
+const renderPage = num => {
+  pageIsRendering = true;
+  pdfDoc.getPage(num).then(page => {
+    const viewport = page.getViewport({ scale });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
-pdfjsLib.getDocument(url).promise.then(pdfDoc => {});
+    const renderCtx = {
+      canvasContext: ctx,
+      viewport
+    };
+
+    page.render(renderCtx).promise.then(() => {
+      pageIsRendering - false;
+
+      if (pageNumIsPending !== null) {
+        renderPage(pageNumIsPending);
+        pageNumIsPending - null;
+      }
+    });
+
+    document.querySelector("#page-num").textContent = num;
+  });
+};
+
+pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
+  pdfDoc = pdfDoc_;
+
+  document.querySelector("#page-count").textContent = pdfDoc.numPages;
+
+  renderPage(pageNum);
+});
