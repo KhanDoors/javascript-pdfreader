@@ -22,7 +22,7 @@ const renderPage = num => {
     };
 
     page.render(renderCtx).promise.then(() => {
-      pageIsRendering - false;
+      pageIsRendering = false;
 
       if (pageNumIsPending !== null) {
         renderPage(pageNumIsPending);
@@ -34,6 +34,30 @@ const renderPage = num => {
   });
 };
 
+const queueRenderPage = num => {
+  if (pageIsRendering) {
+    pageNumIsPending = num;
+  } else {
+    renderPage(num);
+  }
+};
+
+const showPrevPage = () => {
+  if (pageNum <= 1) {
+    return;
+  }
+  pageNum--;
+  queueRenderPage(pageNum);
+};
+
+const showNextPage = () => {
+  if (pageNum >= pdfDoc.numPages) {
+    return;
+  }
+  pageNum++;
+  queueRenderPage(pageNum);
+};
+
 pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
   pdfDoc = pdfDoc_;
 
@@ -41,3 +65,6 @@ pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
 
   renderPage(pageNum);
 });
+
+document.querySelector("#prev-page").addEventListener("click", showPrevPage);
+document.querySelector("#next-page").addEventListener("click", showNextPage);
